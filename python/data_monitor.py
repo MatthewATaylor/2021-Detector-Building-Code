@@ -99,7 +99,8 @@ def add_widgets():
 		activeforeground="black",
 		justify=tk.CENTER,
 		pady=5,
-		padx=5
+		padx=5,
+		cursor="pirate"
 	)
 	power_button.pack(side=tk.LEFT)
 
@@ -180,8 +181,7 @@ def add_widgets():
 			font=(FONT_FAMILY, 17),
 			bg=BACKGROUND_COLOR,
 			fg=GREEN,
-			pady=5,
-			cursor="spider"
+			pady=5
 		)
 		coefficient_label.pack()
 		coefficient_label.bind("<Button-1>", copy_to_clipboard)
