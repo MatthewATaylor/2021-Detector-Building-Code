@@ -22,27 +22,17 @@ void Calibrator::updateCoefficients() {
 	coefficients.newC = C;
 }
 
-void Calibrator::setTempData(double temperature_K, double resistance, int dataIndex) {
-	// Set calibration data to be verified
-	tempTemperature_K = temperature_K;
-	tempResistance = resistance;
-	newDataIndex = dataIndex;
-}
-
-bool Calibrator::verifyTempData() {
-	// Calibration data was verified, move to array of calibration points
-	if (newDataIndex >= 0 && newDataIndex <= 2) {
-		temperatures_K[newDataIndex] = tempTemperature_K;
-		resistances[newDataIndex] = tempResistance;
-		dataRecorded[newDataIndex] = true;
+void Calibrator::setData(double temperature_K, double resistance, int dataIndex) {
+	if (dataIndex >= 0 && dataIndex <= 2) {
+		temperatures_K[dataIndex] = temperature_K;
+		resistances[dataIndex] = resistance;
+		dataRecorded[dataIndex] = true;
 
 		// Three data points collected, display coefficients
 		if (dataRecorded[0] && dataRecorded[1] && dataRecorded[2]) {
 			displayCoefficients();
-			return true;
 		}
 	}
-	return false;
 }
 
 double Calibrator::getTemperature(double thermVoltage) {
@@ -61,7 +51,9 @@ double Calibrator::getTemperature(double thermVoltage) {
 
 void Calibrator::displayCoefficients() {
 	updateCoefficients();
-	Serial.println("A: " + String(coefficients.newA, 16));
-	Serial.println("B: " + String(coefficients.newB, 16));
-	Serial.println("C: " + String(coefficients.newC, 16));
+	Serial.println(
+		"COEFFICIENTS | A = " + String(coefficients.newA, 16) +
+		" | B = " + String(coefficients.newB, 16) +
+		" | C = " + String(coefficients.newC, 16)
+	);
 }

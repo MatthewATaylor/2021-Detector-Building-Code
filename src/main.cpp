@@ -1,14 +1,13 @@
 #include <Arduino.h>
 #include <Adafruit_ADS1015.h>
 
-#include "TempAccumulator.h"
+#include "Accumulator.h"
 #include "Calibrator.h"
-#include "DataWriter.h"
 #include "InputHandler.h"
 #include "GlobalConstants.h"
 
-// 16-bit ADC
-const double ADC_MAX = 65535.0;
+const double ADC_MAX_VALUE = 32767.0;  // 15-bit ADC
+const double ADC_MAX_VOLTAGE = 4.096;  // With gain of 1
 
 // Digital and analog IO pin numbers
 struct Pins {
@@ -19,10 +18,9 @@ struct Pins {
 };
 
 Adafruit_ADS1115 adc;
-TempAccumulator accumulator;
+Accumulator<int> analogAccumulator;
 Calibrator calibrator;
-DataWriter dataWriter;
-InputHandler inputHandler(&calibrator, &dataWriter);
+InputHandler inputHandler(&calibrator);
 
 void controlLEDs(double temperature) {
 	// Control blue LED
@@ -54,6 +52,7 @@ void setup() {
 	Serial.begin(9600);
 
 	adc.begin();
+	adc.setGain(GAIN_ONE);
 
 	pinMode(Pins::RED, OUTPUT);
 	pinMode(Pins::GREEN, OUTPUT);
@@ -62,34 +61,47 @@ void setup() {
 
 void loop() {
 	int analogValue = adc.readADC_SingleEnded(Pins::THERMISTOR);
+	analogAccumulator.addValue(analogValue);  // Average together past readings
 
-	// Scale [0, ADC_MAX] to [0, V_OUT]
-	double thermVoltage = GlobalConstants::V_OUT * (analogValue / ADC_MAX);
+	if (analogAccumulator.hasEnoughData) {
+		// Enough data accumulated for calculations below
 
-	// KVL: V_OUT - fixedResistorVoltage - thermVoltage = 0
-	double fixedResistorVoltage = GlobalConstants::V_OUT - thermVoltage;
+		double avgAnalogValue = analogAccumulator.getAvgValue();
 
-	// I = V / R
-	double current = fixedResistorVoltage / GlobalConstants::FIXED_RESISTANCE;
+		// Scale [0, ADC_MAX_VALUE] to [0, ADC_MAX_VOLTAGE]
+		double thermVoltage = ADC_MAX_VOLTAGE * (avgAnalogValue / ADC_MAX_VALUE);
 
-	// R = V / I
-	double thermResistance = thermVoltage / current;
+		// KVL: V_OUT - fixedResistorVoltage - thermVoltage = 0
+		double fixedResistorVoltage = GlobalConstants::V_OUT - thermVoltage;
 
-	double temperature = calibrator.getTemperature(thermVoltage);
+		// I = V / R
+		double current = fixedResistorVoltage / GlobalConstants::FIXED_RESISTANCE;
 
-	// Read commands entered through serial monitor
-	inputHandler.poll(thermResistance);
+		// R = V / I
+		double thermResistance = thermVoltage / current;
 
-	// Add temperature into accumulator for averaging with previous values
-	accumulator.addTemperature(temperature);
+		double temperature = calibrator.getTemperature(thermVoltage);
+		double roundedTemperature = round(temperature * 10) / 10.0;
 
-	// Display data on serial monitor
-	dataWriter.write(
-		analogValue, fixedResistorVoltage, thermVoltage,
-		thermResistance, &accumulator
-	);
+		Serial.println(
+			"DATA | Analog Value: " + String(avgAnalogValue, 2) +
+			" | Resistor Voltage (Volts): " + String(fixedResistorVoltage, 2) +
+			" | Thermistor Voltage (Volts): " + String(thermVoltage, 2) +
+			" | Thermistor Resistance (Ohms): " + String(thermResistance, 2) +
+			" | Temperature (deg. C): " + String(roundedTemperature, 1)
+		);
 
-	controlLEDs(temperature);
+		inputHandler.poll(thermResistance);
+
+		controlLEDs(temperature);
+	}
+	else {
+		Serial.println("DATA");
+
+		digitalWrite(Pins::RED, LOW);
+		digitalWrite(Pins::GREEN, LOW);
+		digitalWrite(Pins::BLUE, LOW);
+	}
 
 	delay(50);
 }

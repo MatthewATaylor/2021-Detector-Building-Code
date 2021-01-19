@@ -18,11 +18,6 @@ private:
 		double newC = C;
 	} coefficients;
 
-	// Calibration data to be verified
-	int newDataIndex = -1;
-	double tempTemperature_K;
-	double tempResistance;
-
 	// Calibration data (temperature recorded in K)
 	double temperatures_K[3];
 	double resistances[3];
@@ -31,8 +26,7 @@ private:
 	void updateCoefficients();
 
 public:
-	void setTempData(double temperature_K, double resistance, int dataIndex);
-	bool verifyTempData();  // Returns true if all needed data has been collected
+	void setData(double temperature_K, double resistance, int dataIndex);
 	double getTemperature(double thermVoltage);
 	void displayCoefficients();
 };
