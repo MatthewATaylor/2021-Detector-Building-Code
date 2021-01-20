@@ -14,10 +14,13 @@ class ArduinoSerial:
 			print(f"{port.device}: {port.description}")
 			if "arduino" in port.description.lower():
 				port_name = port.device
+
+		self.port = serial.Serial()
 		if len(port_name) == 0:
-			raise Exception("No Arduino ports found")
-		print(f"Selected port: {port_name}\n")
-		self.port = serial.Serial(port_name, baud_rate)
+			print("No Arduino ports found")
+		else:
+			print(f"Selected port: {port_name}\n")
+			self.port = serial.Serial(port_name, baud_rate)
 
 		self.should_close = False
 		self.is_paused = False
@@ -48,6 +51,7 @@ class ArduinoSerial:
 					self.disable_data_text()
 			except serial.SerialException:
 				self.disable_data_text()
+			time.sleep(0.1)
 
 	def set_data(self, reading_elements):
 		"""Set data label text given list of serial reading_elements"""

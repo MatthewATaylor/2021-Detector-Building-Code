@@ -180,8 +180,7 @@ def add_widgets():
 			textvariable=arduino_serial.coefficient_text[i],
 			font=(FONT_FAMILY, 17),
 			bg=BACKGROUND_COLOR,
-			fg=GREEN,
-			pady=5
+			fg=GREEN
 		)
 		coefficient_label.pack()
 		coefficient_label.bind("<Button-1>", copy_to_clipboard)
