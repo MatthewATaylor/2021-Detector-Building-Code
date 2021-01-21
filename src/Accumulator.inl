@@ -1,11 +1,11 @@
-template <typename T>
+template<typename T>
 inline int Accumulator<T>::compare(const void *num1, const void *num2) {
     return static_cast<int>(
         *static_cast<const T*>(num1) - *static_cast<const T*>(num2)
     );
 }
 
-template <typename T>
+template<typename T>
 inline double Accumulator<T>::getAvgValue() {
     // Sort previous values from smallest to largest
     T sortedPrevValues[NUM_VALUES];
@@ -23,7 +23,7 @@ inline double Accumulator<T>::getAvgValue() {
     return valueSum / static_cast<double>(NUM_AVERAGED_VALUES);
 }
 
-template <typename T>
+template<typename T>
 inline void Accumulator<T>::addValue(T value) {
     // Update prevValues buffer with new value reading
     prevValues[newValueIndex] = value;

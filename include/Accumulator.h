@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-template <typename T>
+template<typename T>
 class Accumulator {
 private:
 	static const int NUM_VALUES = 15;
