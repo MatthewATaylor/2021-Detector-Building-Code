@@ -103,6 +103,9 @@ class ArduinoSerial:
 		elif reading_elements[0] == "INPUT" and len(reading_elements) == 2:
 			# Display Arduino inputs for debugging
 			print(f"Arduino received: {reading_elements[1]}")
+		elif reading_elements[0] == "DEBUG" and len(reading_elements) == 2:
+			# Display debug info
+			print(f"Debug: {reading_elements[1]}")
 
 	def schedule_write(self, value):
 		self.write_queue.append(value.encode())
