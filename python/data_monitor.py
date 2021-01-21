@@ -5,6 +5,7 @@ from functools import partial
 from ArduinoSerial import *
 
 
+NUM_COEFFICIENTS = 5
 FONT_FAMILY = "Fixedsys"
 BACKGROUND_COLOR = "#111111"
 GREEN = "#218546"
@@ -14,9 +15,14 @@ window = tk.Tk()
 # Global widget data
 power_button_text = tk.StringVar(value="Power Off")
 hold_button_text = tk.StringVar(value="||")
+regression_type_button_text = tk.StringVar(value="Use Steinhart-Hart")
+coefficient_button_text = tk.StringVar(value="Use New Coefficients")
 temperature_entries = []
 
-arduino_serial = ArduinoSerial(9600)
+use_steinhart_hart = False
+use_new_coefficients = False
+
+arduino_serial = ArduinoSerial(9600, NUM_COEFFICIENTS)
 
 
 def str_is_number(string):
@@ -27,11 +33,28 @@ def str_is_number(string):
 		return False
 
 
+def reset_variables():
+	"""Put all variables back in starting position"""
+	global use_steinhart_hart
+	global use_new_coefficients
+
+	use_steinhart_hart = False
+	regression_type_button_text.set("Use Steinhart-Hart")
+
+	use_new_coefficients = False
+	coefficient_button_text.set("Use New Coefficients")
+
+	for text in arduino_serial.calibration_x_text:
+		text.set("")
+	arduino_serial.coefficient_text.set("")
+
+
 def toggle_serial():
 	"""Open and close the serial port with power button"""
 	if arduino_serial.port.is_open:
 		power_button_text.set("Power On")
 		arduino_serial.should_close = True
+		reset_variables()
 	else:
 		power_button_text.set("Power Off")
 		arduino_serial.port.open()
@@ -49,12 +72,38 @@ def toggle_hold():
 def submit_temperature(sample_num):
 	if not str_is_number(temperature_entries[sample_num].get()):
 		return
-	command = f"set{sample_num} {temperature_entries[sample_num].get()}"
+	command = f"set {sample_num} {temperature_entries[sample_num].get()}"
 	arduino_serial.schedule_write(command)
 
 
+def toggle_regression_type():
+	global use_steinhart_hart
+	use_steinhart_hart = not use_steinhart_hart
+	if use_steinhart_hart:
+		regression_type_button_text.set("Use Polynomial")
+		arduino_serial.schedule_write("set sh true")
+	else:
+		regression_type_button_text.set("Use Steinhart-Hart")
+		arduino_serial.schedule_write("set sh false")
+
+
+def toggle_coefficients():
+	global use_new_coefficients
+	use_new_coefficients = not use_new_coefficients
+	if use_new_coefficients:
+		coefficient_button_text.set("Use Original Coefficients")
+		arduino_serial.schedule_write("set newc true")
+	else:
+		coefficient_button_text.set("Use New Coefficients")
+		arduino_serial.schedule_write("set newc false")
+
+
+def get_coefficients():
+	arduino_serial.schedule_write("get coefficients")
+
+
 def copy_to_clipboard(event):
-	text = event.widget.cget("text")[4:]  # Grab text, excluding "A = ", etc.
+	text = event.widget.cget("text")  # Grab label text
 	window.clipboard_clear()
 	window.clipboard_append(text)
 
@@ -127,7 +176,7 @@ def add_widgets():
 	)
 	calibration_form_frame.pack()
 
-	for i in range(3):
+	for i in range(NUM_COEFFICIENTS):
 		calibration_frame = tk.Frame(
 			calibration_form_frame,
 			bg=BACKGROUND_COLOR
@@ -164,28 +213,82 @@ def add_widgets():
 		)
 		submit_temperature_button.pack(side=tk.LEFT)
 
-		resistance_label = tk.Label(
+		calibration_x_label = tk.Label(
 			calibration_frame,
-			textvariable=arduino_serial.resistance_text[i],
+			textvariable=arduino_serial.calibration_x_text[i],
 			font=(FONT_FAMILY, 17),
 			bg=BACKGROUND_COLOR,
 			fg=GREEN
 		)
-		resistance_label.pack(side=tk.LEFT)
+		calibration_x_label.pack(side=tk.LEFT)
+
+	# Calibration setting buttons
+	calibration_button_frame = tk.Frame(
+		window,
+		bg=BACKGROUND_COLOR
+	)
+	calibration_button_frame.pack()
+
+	regression_type_button = tk.Button(
+		calibration_button_frame,
+		command=toggle_regression_type,
+		textvariable=regression_type_button_text,
+		font=(FONT_FAMILY, 16),
+		bg="black",
+		fg=GREEN,
+		activebackground=GREEN,
+		activeforeground="black",
+		justify=tk.CENTER,
+		pady=5,
+		padx=5
+	)
+	regression_type_button.pack(side=tk.LEFT)
+
+	coefficient_button = tk.Button(
+		calibration_button_frame,
+		command=toggle_coefficients,
+		textvariable=coefficient_button_text,
+		font=(FONT_FAMILY, 16),
+		bg="black",
+		fg=GREEN,
+		activebackground=GREEN,
+		activeforeground="black",
+		justify=tk.CENTER,
+		pady=5,
+		padx=5
+	)
+	coefficient_button.pack(side=tk.LEFT)
+
+	get_coefficients_button = tk.Button(
+		calibration_button_frame,
+		command=get_coefficients,
+		text="Get Coefficients",
+		font=(FONT_FAMILY, 16),
+		bg="black",
+		fg=GREEN,
+		activebackground=GREEN,
+		activeforeground="black",
+		justify=tk.CENTER,
+		pady=5,
+		padx=5
+	)
+	get_coefficients_button.pack(side=tk.LEFT)
 
 	# Coefficients
-	for i in range(3):
-		coefficient_label = tk.Label(
-			window,
-			textvariable=arduino_serial.coefficient_text[i],
-			font=(FONT_FAMILY, 17),
-			bg=BACKGROUND_COLOR,
-			fg=GREEN
-		)
-		coefficient_label.pack()
-		coefficient_label.bind("<Button-1>", copy_to_clipboard)
-		coefficient_label.bind("<Enter>", lambda event: event.widget.configure(fg="#31a841"))
-		coefficient_label.bind("<Leave>", lambda event: event.widget.configure(fg=GREEN))
+	coefficient_label = tk.Label(
+		window,
+		textvariable=arduino_serial.coefficient_text,
+		font=(FONT_FAMILY, 17),
+		bg=BACKGROUND_COLOR,
+		fg=GREEN,
+		pady=34
+	)
+	coefficient_label.pack()
+	coefficient_label.bind("<Button-1>", copy_to_clipboard)
+
+	# Change coefficient text on hover
+	coefficient_label.bind("<Enter>", lambda event: event.widget.configure(fg="#31a841"))
+	coefficient_label.bind("<Leave>", lambda event: event.widget.configure(fg=GREEN))
 
 
 def main():

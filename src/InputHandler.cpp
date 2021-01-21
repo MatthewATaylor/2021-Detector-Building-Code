@@ -34,8 +34,9 @@ void InputHandler::poll(double thermResistance, double thermVoltage) {
 
 		// Print resistance for verification
 		Serial.println(
-			"CALIBRATION | " + String(command[3]) +
-			" | V = " + String(thermVoltage, 4)
+			"CALIBRATION | " + String(command[4]) +
+			" | V = " + String(thermVoltage, 4) +
+			" | R = " + String(thermResistance, 2)
 		);
 	}
 

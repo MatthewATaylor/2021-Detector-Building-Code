@@ -24,10 +24,12 @@ inline void Calibrator::performRegression(
 
 		Mat<double, MAX_CALIBRATION_POINTS, 1> temperatureMat;
 		for (uint8_t i = 0; i < numCalibrationPoints; ++i) {
-			temperatureMat(i, 0) = recordedTemperatures_C[i];
 			if (useSteinhartHart) {
-				// Steinhart-Hart equation works best in Kelvin
-				temperatureMat(i, 0) += GlobalConstants::KELVIN_CONVERSION;
+				temperatureMat(i, 0) =
+					1.0 / (recordedTemperatures_C[i] + GlobalConstants::KELVIN_CONVERSION);
+			}
+			else {
+				temperatureMat(i, 0) = recordedTemperatures_C[i];
 			}
 		}
 
@@ -128,8 +130,10 @@ inline void Calibrator::displayCoefficients() {
 
 inline void Calibrator::setUseSteinhartHart(bool useSteinhartHart) {
 	this->useSteinhartHart = useSteinhartHart;
+	displayCoefficients();
 }
 
 inline void Calibrator::setUseNewCoefficients(bool useNewCoefficients) {
 	this->useNewCoefficients = useNewCoefficients;
+	displayCoefficients();
 }
