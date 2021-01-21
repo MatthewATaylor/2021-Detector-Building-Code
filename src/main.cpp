@@ -5,7 +5,6 @@
 #include "Calibrator.h"
 #include "InputHandler.h"
 #include "GlobalConstants.h"
-#include "Mat.h"
 
 const double ADC_MAX_VALUE = 32767.0;  // 15-bit ADC
 const double ADC_MAX_VOLTAGE = 4.096;  // With gain of 1
@@ -61,48 +60,48 @@ void setup() {
 }
 
 void loop() {
-	// int analogValue = adc.readADC_SingleEnded(Pins::THERMISTOR);
-	// analogAccumulator.addValue(analogValue);  // Average together past readings
+	int analogValue = adc.readADC_SingleEnded(Pins::THERMISTOR);
+	analogAccumulator.addValue(analogValue);  // Average together past readings
 
-	// if (analogAccumulator.hasEnoughData) {
-	// 	// Enough data accumulated for calculations below
+	if (analogAccumulator.hasEnoughData) {
+		// Enough data accumulated for calculations below
 
-	// 	double avgAnalogValue = analogAccumulator.getAvgValue();
+		double avgAnalogValue = analogAccumulator.getAvgValue();
 
-	// 	// Scale [0, ADC_MAX_VALUE] to [0, ADC_MAX_VOLTAGE]
-	// 	double thermVoltage = ADC_MAX_VOLTAGE * (avgAnalogValue / ADC_MAX_VALUE);
+		// Scale [0, ADC_MAX_VALUE] to [0, ADC_MAX_VOLTAGE]
+		double thermVoltage = ADC_MAX_VOLTAGE * (avgAnalogValue / ADC_MAX_VALUE);
 
-	// 	// KVL: V_OUT - fixedResistorVoltage - thermVoltage = 0
-	// 	double fixedResistorVoltage = GlobalConstants::V_OUT - thermVoltage;
+		// KVL: V_OUT - fixedResistorVoltage - thermVoltage = 0
+		double fixedResistorVoltage = GlobalConstants::V_OUT - thermVoltage;
 
-	// 	// I = V / R
-	// 	double current = fixedResistorVoltage / GlobalConstants::FIXED_RESISTANCE;
+		// I = V / R
+		double current = fixedResistorVoltage / GlobalConstants::FIXED_RESISTANCE;
 
-	// 	// R = V / I
-	// 	double thermResistance = thermVoltage / current;
+		// R = V / I
+		double thermResistance = thermVoltage / current;
 
-	// 	double temperature = calibrator.getTemperature(thermVoltage);
-	// 	double roundedTemperature = round(temperature * 10) / 10.0;
+		double temperature = calibrator.getTemperature(thermVoltage);
+		double roundedTemperature = round(temperature * 10) / 10.0;
 
-	// 	Serial.println(
-	// 		"DATA | Analog Value: " + String(avgAnalogValue, 2) +
-	// 		" | Resistor Voltage (Volts): " + String(fixedResistorVoltage, 2) +
-	// 		" | Thermistor Voltage (Volts): " + String(thermVoltage, 2) +
-	// 		" | Thermistor Resistance (Ohms): " + String(thermResistance, 2) +
-	// 		" | Temperature (deg. C): " + String(roundedTemperature, 1)
-	// 	);
+		Serial.println(
+			"DATA | Analog Value: " + String(avgAnalogValue, 2) +
+			" | Resistor Voltage (Volts): " + String(fixedResistorVoltage, 4) +
+			" | Thermistor Voltage (Volts): " + String(thermVoltage, 4) +
+			" | Thermistor Resistance (Ohms): " + String(thermResistance, 2) +
+			" | Temperature (deg. C): " + String(roundedTemperature, 1)
+		);
 
-	// 	inputHandler.poll(thermResistance);
+		inputHandler.poll(thermResistance, thermVoltage);
 
-	// 	controlLEDs(temperature);
-	// }
-	// else {
-	// 	Serial.println("DATA");
+		controlLEDs(temperature);
+	}
+	else {
+		Serial.println("DATA");
 
-	// 	digitalWrite(Pins::RED, LOW);
-	// 	digitalWrite(Pins::GREEN, LOW);
-	// 	digitalWrite(Pins::BLUE, LOW);
-	// }
+		digitalWrite(Pins::RED, LOW);
+		digitalWrite(Pins::GREEN, LOW);
+		digitalWrite(Pins::BLUE, LOW);
+	}
 
-	// delay(50);
+	delay(50);
 }

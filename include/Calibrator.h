@@ -4,31 +4,56 @@
 #include <Arduino.h>
 
 #include "GlobalConstants.h"
+#include "Mat.h"
 
 class Calibrator {
 private:
-	// Steinhart-Hart coefficients
-	struct Coefficients {
-		static constexpr double A = 0.00063017407;
-		static constexpr double B = 0.00023429448;
-		static constexpr double C = 0.000000030105159;
+	static const uint8_t NUM_COEFFICIENTS = 5;
 
-		double newA = A;
-		double newB = B;
-		double newC = C;
-	} coefficients;
+	// Regression coefficients
+	const double COEFFICIENTS[NUM_COEFFICIENTS] = {
+		0.0,
+		0.0,
+		0.0,
+		0.0,
+		0.0
+	};
 
-	// Calibration data (temperature recorded in K)
-	double temperatures_K[3];
-	double resistances[3];
-	bool dataRecorded[3] = { 0 };
+	// New coefficients set during program execution
+	double newCoefficients[NUM_COEFFICIENTS] = {
+		0.0,
+		0.0,
+		0.0,
+		0.0,
+		0.0
+	};
+
+	bool useSteinhartHart = false;
+	bool useNewCoefficients = false;
+
+	// Calibration data (temperature recorded in deg. C)
+	double resistances[NUM_COEFFICIENTS];
+	double temperatures_C[NUM_COEFFICIENTS];
+	bool dataRecorded[NUM_COEFFICIENTS] = { 0 };
+
+	// Recursively find number of calibration points, then perform regression
+	template <uint8_t MAX_CALIBRATION_POINTS>
+	void performRegression(
+		double recordedResistances[NUM_COEFFICIENTS],
+		double recordedTemperatures_C[NUM_COEFFICIENTS],
+		uint8_t numCalibrationPoints
+	);
 
 	void updateCoefficients();
 
 public:
-	void setData(double temperature_K, double resistance, int dataIndex);
-	double getTemperature(double thermVoltage);
+	void setData(double resistance, double temperature_C, int dataIndex);
+	double getTemperature(double thermVoltage);  // Get temperature in deg. C
 	void displayCoefficients();
+	void setUseSteinhartHart(bool useSteinhartHart);
+	void setUseNewCoefficients(bool useNewCoefficients);
 };
+
+#include "../src/Calibrator.inl"
 
 #endif

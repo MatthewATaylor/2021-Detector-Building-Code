@@ -13,7 +13,7 @@ class InputHandler {
 
 public:
 	InputHandler(Calibrator *calibrator);
-	void poll(double thermResistance);
+	void poll(double thermResistance, double thermVoltage);
 };
 
 #endif
