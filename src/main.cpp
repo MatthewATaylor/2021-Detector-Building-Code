@@ -40,7 +40,7 @@ void controlLEDs(double temperature) {
 	}
 
 	// Control red LED
-	if (temperature > 35) {
+	if (temperature > 35 && temperature <= 100) {
 		digitalWrite(Pins::RED, HIGH);
 	}
 	else {
