@@ -103,6 +103,7 @@ inline double Calibrator::getTemperature(double thermVoltage) {
 
 	double temperature = 0.0;
 	if (useSteinhartHart) {
+		// Steinhart-Hart model
 		for (uint8_t i = 0; i < NUM_COEFFICIENTS; ++i) {
 			uint8_t exponent = i < 2 ? i : i + 1;  // Squared term found to reduce accuracy
 			temperature += coefficients[i] * pow(log(thermResistance), exponent);
@@ -111,6 +112,7 @@ inline double Calibrator::getTemperature(double thermVoltage) {
 		temperature -= GlobalConstants::KELVIN_CONVERSION;
 	}
 	else {
+		// Polynomial model
 		for (uint8_t i = 0; i < NUM_COEFFICIENTS; ++i) {
 			temperature += coefficients[i] * pow(thermResistance, i);
 		}
