@@ -12,9 +12,9 @@ private:
 
 	// Regression coefficients
 	const double COEFFICIENTS[NUM_COEFFICIENTS] = {
-		0.0,
-		0.0,
-		0.0,
+		0.0011391863,
+		0.00022560079,
+		0.00000010786971,
 		0.0,
 		0.0
 	};

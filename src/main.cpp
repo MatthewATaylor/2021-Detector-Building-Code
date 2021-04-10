@@ -24,7 +24,7 @@ InputHandler inputHandler(&calibrator);
 
 void controlLEDs(double temperature) {
 	// Control blue LED
-	if (temperature >= 0 && temperature <= 20) {
+	if (temperature <= 19.99) {
 		digitalWrite(Pins::BLUE, HIGH);
 	}
 	else {
@@ -32,7 +32,7 @@ void controlLEDs(double temperature) {
 	}
 
 	// Control green LED
-	if (temperature > 20 && temperature <= 35) {
+	if (temperature >= 20 && temperature <= 44.99) {
 		digitalWrite(Pins::GREEN, HIGH);
 	}
 	else {
@@ -40,7 +40,7 @@ void controlLEDs(double temperature) {
 	}
 
 	// Control red LED
-	if (temperature > 35 && temperature <= 100) {
+	if (temperature >= 45) {
 		digitalWrite(Pins::RED, HIGH);
 	}
 	else {
